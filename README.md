@@ -66,3 +66,21 @@ This method also can be configured with the following environment variables:
 - `NODE_LOGGER_ATTRIBUTES`: You can define multiple times using the format `<key>=<value>` and separate by a comma, eg: `NODE_LOGGER_ATTRIBUTES=machine=dev,protocol=http`.
 - `NODE_LOGGER_FORMATTERS`: TODO.
 - `NODE_LOGGER_TRANSPORTS`: TODO.
+
+### buildTransport
+
+This method allows you to create a new transport for `pino`, you can read more about it [here](https://github.com/pinojs/pino-abstract-transport).
+
+In summary, creating a new transport will look like:
+
+```js
+import { buildTransport } from 'node:logging';
+
+export default async function (opts) {
+  return buildTransport(async function (source) {
+    for await (let obj of source) {
+      console.log(obj)
+    }
+  })
+}
+```
