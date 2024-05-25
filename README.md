@@ -4,6 +4,12 @@ In this repository, you will find the "skeleton" of the proposal to introduce St
 
 This proposal is based on the [Pino](https://github.com/pinojs/pino) logger, which is a very fast logger for Node.js.
 
+## References
+
+- [Pino API Docs](https://github.com/pinojs/pino/blob/main/docs/api.md)
+- [Matteo Collina: Multithreaded Logging with Pino](https://www.youtube.com/watch?v=vETUVN-KEgc)
+- [Matteo Collina: let's talk about logging](https://www.youtube.com/watch?v=fILO3kegjfw)
+
 ## API
 
 The API consists of the following methods:
