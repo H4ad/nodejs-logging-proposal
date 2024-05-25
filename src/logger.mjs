@@ -5,7 +5,7 @@ import pino from 'pino';
  */
 
 /**
- * @typedef {Pick<pino.LoggerOptions, 'level' | 'transport' | 'customLevels' | 'crlf' | 'hooks' | 'formatters' | 'depthLimit' | 'edgeLimit' | 'enabled' | 'msgPrefix' | 'serializers' | 'safe' | 'name' | 'timestamp'>} LoggerGlobalOptions
+ * @typedef {Pick<pino.LoggerOptions, 'level' | 'transport' | 'customLevels' | 'crlf' | 'hooks' | 'formatters' | 'depthLimit' | 'edgeLimit' | 'enabled' | 'msgPrefix' | 'serializers' | 'safe' | 'name' | 'timestamp'> & { attributes?: object }} LoggerGlobalOptions
  */
 
 const kInternalConstructor = Symbol('kInternalConstructor');
@@ -15,10 +15,26 @@ const kUpdatePinoGlobal = Symbol('kUpdatePinoGlobal');
  * @returns {LoggerGlobalOptions}
  */
 function buildDefaultOptionsFromEnvironment() {
-  return {}
+  let attributes = undefined;
+
+  if (process.env.NODE_LOGGER_ATTRIBUTES) {
+    attributes = process.env.NODE_LOGGER_ATTRIBUTES.split(',').reduce((acc, curr) => {
+      const [key, value] = curr.split('=');
+
+      // TODO: Sanitize key to avoid security issues
+      acc[key] = value;
+
+      return acc;
+    }, { });
+  }
+
+  return {
+    level: process.env.NODE_LOGGER_LEVEL,
+    attributes,
+  }
 }
 
-let pinoInstance = pino(buildDefaultOptionsFromEnvironment());
+let pinoInstance = undefined;;
 
 // TODO: How to free those objects if the logger is not used anymore?
 const pinoChildInstances = new Map();
@@ -33,6 +49,7 @@ export function setOptions(options) {
 
   options = Object.assign({}, buildDefaultOptionsFromEnvironment(), options);
 
+  const attributes = options.attributes;
   const validProperties = ['level', 'transport', 'customLevels', 'crlf', 'hooks', 'formatters', 'depthLimit', 'edgeLimit', 'enabled', 'msgPrefix', 'serializers', 'safe', 'name', 'timestamp'];
 
   for (const key of Object.keys(options)) {
@@ -41,12 +58,22 @@ export function setOptions(options) {
     }
   }
 
-  pinoInstance = pino(options);
+  pinoInstance = pino({
+    ...options,
+    ...attributes && {
+      mixin: () => attributes,
+    },
+  });
 
   for (const logger of pinoChildInstances) {
     logger[kUpdatePinoGlobal]();
   }
 }
+
+/**
+ * Initialize the logger with default options
+ */
+setOptions({});
 
 export class Logger {
   /**

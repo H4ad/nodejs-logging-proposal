@@ -53,3 +53,10 @@ The options for this method are the following:
 - `options.msgPrefix`: The msgPrefix property allows you to specify a prefix for every message of the logger and its children.
 - `options.serializers`: See more about serializers [here](https://github.com/pinojs/pino/blob/main/docs/api.md#serializers-object)
 - `options.safe`: Avoid errors caused by circular references in the object tree.
+
+This method also can be configured with the following environment variables:
+
+- `NODE_LOGGER_LEVEL`: The default log level for all child loggers.
+- `NODE_LOGGER_ATTRIBUTES`: You can define multiple times using the format `<key>=<value>` and separate by a comma, eg: `NODE_LOGGER_ATTRIBUTES=machine=dev,protocol=http`.
+- `NODE_LOGGER_FORMATTERS`: TODO.
+- `NODE_LOGGER_TRANSPORTS`: TODO.
