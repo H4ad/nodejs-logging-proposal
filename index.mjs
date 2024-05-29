@@ -1,8 +1,8 @@
-import build from "pino-abstract-transport";
-import { setOptions, getLogger } from "./src/logger.mjs";
+import { buildTransport } from "./src/core/build-transport.js";
+import { getLogger, setOptions } from "./src/logger.js";
 
-export default {
+export {
   setOptions,
   getLogger,
-  buildTransport: build,
-}
+  buildTransport,
+};
