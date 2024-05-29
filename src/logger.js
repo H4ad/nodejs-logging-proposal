@@ -1,4 +1,4 @@
-import pino from 'pino';
+const pino = require('./core/pino');
 
 /**
  * @typedef {{attributes?: object, level?: string, msgPrefix?: string }} LoggerOptions 
@@ -25,13 +25,20 @@ function buildDefaultOptionsFromEnvironment() {
       acc[key] = value;
 
       return acc;
-    }, { });
+    }, {});
   }
 
-  return {
-    level: process.env.NODE_LOGGER_LEVEL,
-    attributes,
+  const options = {};
+
+  if (process.env.NODE_LOGGER_LEVEL) {
+    options.level = process.env.NODE_LOGGER_LEVEL;
   }
+
+  if (attributes) {
+    options.attributes = attributes;
+  }
+
+  return options
 }
 
 let pinoInstance = undefined;;
@@ -42,7 +49,7 @@ const pinoChildInstances = new Map();
 /**
  * @param {LoggerGlobalOptions} options 
  */
-export function setOptions(options) {
+function setOptions(options) {
   if (typeof options !== 'object') {
     throw new TypeError('options must be an object');
   }
@@ -63,6 +70,9 @@ export function setOptions(options) {
     ...attributes && {
       mixin: () => attributes,
     },
+    customLevels: {
+      debug: 0
+    },
   });
 
   for (const logger of pinoChildInstances) {
@@ -75,7 +85,7 @@ export function setOptions(options) {
  */
 setOptions({});
 
-export class Logger {
+class Logger {
   /**
    * @type {pino.Logger}
    */
@@ -164,7 +174,7 @@ export class Logger {
  * @param {LoggerOptions} options
  * @returns Logger
  */
-export function getLogger(name, options) {
+function getLogger(name, options) {
   const alreadyExist = pinoChildInstances.get(name);
 
   if (alreadyExist !== undefined) {
@@ -176,4 +186,9 @@ export function getLogger(name, options) {
   pinoChildInstances.set(logger);
 
   return logger;
+}
+
+module.exports = {
+  getLogger,
+  setOptions,
 }
