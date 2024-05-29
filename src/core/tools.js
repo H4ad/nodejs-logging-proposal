@@ -303,17 +303,19 @@ function createArgsNormalizer (defaultOptions) {
       opts = {}
     } else if (opts.transport) {
       if (opts.transport instanceof SonicBoom || opts.transport.writable || opts.transport._writableState) {
-        throw Error('option.transport do not allow stream, please pass to option directly. e.g. pino(transport)')
-      }
-      if (opts.transport.targets && opts.transport.targets.length && opts.formatters && typeof opts.formatters.level === 'function') {
-        throw Error('option.transport.targets do not allow custom level formatters')
-      }
+        stream = opts.transport
+        delete opts.transport
+      } else {
+        if (opts.transport.targets && opts.transport.targets.length && opts.formatters && typeof opts.formatters.level === 'function') {
+          throw Error('option.transport.targets do not allow custom level formatters')
+        }
 
-      let customLevels
-      if (opts.customLevels) {
-        customLevels = opts.useOnlyCustomLevels ? opts.customLevels : Object.assign({}, opts.levels, opts.customLevels)
+        let customLevels
+        if (opts.customLevels) {
+          customLevels = opts.useOnlyCustomLevels ? opts.customLevels : Object.assign({}, opts.levels, opts.customLevels)
+        }
+        stream = transport({ caller, ...opts.transport, levels: customLevels })
       }
-      stream = transport({ caller, ...opts.transport, levels: customLevels })
     }
     opts = Object.assign({}, defaultOptions, opts)
     opts.serializers = Object.assign({}, defaultOptions.serializers, opts.serializers)

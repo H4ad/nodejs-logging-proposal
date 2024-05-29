@@ -17,14 +17,15 @@
   "types": "./types/index.d.ts",
   "description": "",
   "dependencies": {
-    "split2": "4.2.0",
-    "pino-std-serializers": "7.0.0",
     "atomic-sleep": "1.0.0",
+    "on-exit-leak-free": "2.1.2",
+    "pino-std-serializers": "7.0.0",
     "sonic-boom": "4.0.1",
-    "thread-stream": "3.0.1",
-    "on-exit-leak-free": "2.1.2"
+    "split2": "4.2.0",
+    "thread-stream": "3.0.1"
   },
   "devDependencies": {
+    "@types/node": "^20.12.13",
     "pino": "9.1.0"
   }
 }
