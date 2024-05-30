@@ -95,9 +95,6 @@ function buildTransport(fn, opts = {}) {
       levels: {
         get() { return pinoConfig.levels }
       },
-      messageKey: {
-        get() { return pinoConfig.messageKey }
-      },
     })
 
     return configReceived.then(finish)

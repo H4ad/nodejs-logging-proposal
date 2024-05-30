@@ -16,7 +16,6 @@ const {
   timeSliceIndexSym,
   streamSym,
   formattersSym,
-  messageKeySym,
   useOnlyCustomLevelsSym,
   needsMetadataGsym,
   msgPrefixSym
@@ -39,7 +38,8 @@ const {
 
 // note: use of class is satirical
 // https://github.com/pinojs/pino/pull/433#pullrequestreview-127703127
-const constructor = class Pino {}
+const constructor = class Pino {
+}
 const prototype = {
   constructor,
   child,
@@ -47,10 +47,18 @@ const prototype = {
   setBindings,
   flush,
   isLevelEnabled,
-  get level () { return this[getLevelSym]() },
-  set level (lvl) { this[setLevelSym](lvl) },
-  get levelVal () { return this[levelValSym] },
-  set levelVal (n) { throw Error('levelVal is read-only') },
+  get level() {
+    return this[getLevelSym]()
+  },
+  set level(lvl) {
+    this[setLevelSym](lvl)
+  },
+  get levelVal() {
+    return this[levelValSym]
+  },
+  set levelVal(n) {
+    throw Error('levelVal is read-only')
+  },
   [lsCacheSym]: initialLsCache,
   [writeSym]: write,
   [asJsonSym]: asJson,
@@ -61,12 +69,13 @@ const prototype = {
 Object.setPrototypeOf(prototype, EventEmitter.prototype)
 
 // exporting and consuming the prototype object using factory pattern fixes scoping issues with getters when serializing
-module.exports = function () {
+module.exports = function() {
   return Object.create(prototype)
 }
 
 const resetChildingsFormatter = bindings => bindings
-function child (bindings, options) {
+
+function child(bindings, options) {
   if (!bindings) {
     throw Error('missing bindings for child Pino')
   }
@@ -105,7 +114,7 @@ function child (bindings, options) {
   return instance
 }
 
-function bindings () {
+function bindings() {
   const chindings = this[chindingsSym]
   const chindingsJson = `{${chindings.substr(1)}}` // at least contains ,"pid":7068,"hostname":"myMac"
   const bindingsFromJson = JSON.parse(chindingsJson)
@@ -114,15 +123,15 @@ function bindings () {
   return bindingsFromJson
 }
 
-function setBindings (newBindings) {
+function setBindings(newBindings) {
   const chindings = asChindings(this, newBindings)
   this[chindingsSym] = chindings
   delete this[parsedChindingsSym]
 }
 
-function write (_obj, msg, num) {
+function write(_obj, msg, num) {
   const t = this[timeSym]()
-  const messageKey = this[messageKeySym]
+  const messageKey = 'message'
   let obj
 
   if (_obj === undefined || _obj === null) {
@@ -152,9 +161,10 @@ function write (_obj, msg, num) {
   stream.write(s)
 }
 
-function noop () {}
+function noop() {
+}
 
-function flush (cb) {
+function flush(cb) {
   if (cb != null && typeof cb !== 'function') {
     throw Error('callback must be a function')
   }
