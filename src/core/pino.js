@@ -1,7 +1,6 @@
 'use strict'
 /* eslint no-prototype-builtins: 0 */
 const os = require('os')
-const stdSerializers = require('pino-std-serializers')
 const caller = require('./caller')
 const time = require('./time')
 const proto = require('./proto')
@@ -36,7 +35,6 @@ const {
 const { epochTime, nullTime } = time
 const { pid } = process
 const hostname = os.hostname()
-const defaultErrorSerializer = stdSerializers.err
 const defaultOptions = {
   level: 'info',
   levelComparison: SORTING_ORDER.ASC,
@@ -44,9 +42,6 @@ const defaultOptions = {
   nestedKey: null,
   enabled: true,
   base: { pid, hostname },
-  serializers: Object.assign(Object.create(null), {
-    err: defaultErrorSerializer
-  }),
   formatters: Object.assign(Object.create(null), {
     bindings(bindings) {
       return bindings
@@ -63,8 +58,6 @@ const defaultOptions = {
 }
 
 const normalize = createArgsNormalizer(defaultOptions)
-
-const serializers = Object.assign(Object.create(null), stdSerializers)
 
 function pino(...args) {
   const instance = {}
@@ -165,8 +158,7 @@ module.exports.destination = (dest = process.stdout.fd) => {
 }
 
 module.exports.levels = mappings()
-module.exports.stdSerializers = serializers
-module.exports.stdTimeFunctions = Object.assign({}, time)
+
 module.exports.symbols = symbols
 
 // Enables default and name export with TypeScript and Babel
