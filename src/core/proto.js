@@ -13,20 +13,14 @@ const {
   mixinSym,
   asJsonSym,
   writeSym,
-  mixinMergeStrategySym,
   timeSym,
   timeSliceIndexSym,
   streamSym,
-  serializersSym,
   formattersSym,
   errorKeySym,
   messageKeySym,
   useOnlyCustomLevelsSym,
   needsMetadataGsym,
-  redactFmtSym,
-  stringifySym,
-  formatOptsSym,
-  stringifiersSym,
   msgPrefixSym
 } = require('./symbols')
 const {
@@ -44,7 +38,6 @@ const {
   buildFormatters,
   stringify
 } = require('./tools')
-const redaction = require('./redaction')
 
 // note: use of class is satirical
 // https://github.com/pinojs/pino/pull/433#pullrequestreview-127703127
@@ -80,32 +73,9 @@ function child (bindings, options) {
     throw Error('missing bindings for child Pino')
   }
   options = options || {} // default options to empty object
-  const serializers = this[serializersSym]
   const formatters = this[formattersSym]
   const instance = Object.create(this)
 
-  if (options.hasOwnProperty('serializers') === true) {
-    instance[serializersSym] = Object.create(null)
-
-    for (const k in serializers) {
-      instance[serializersSym][k] = serializers[k]
-    }
-    const parentSymbols = Object.getOwnPropertySymbols(serializers)
-    /* eslint no-var: off */
-    for (var i = 0; i < parentSymbols.length; i++) {
-      const ks = parentSymbols[i]
-      instance[serializersSym][ks] = serializers[ks]
-    }
-
-    for (const bk in options.serializers) {
-      instance[serializersSym][bk] = options.serializers[bk]
-    }
-    const bindingsSymbols = Object.getOwnPropertySymbols(options.serializers)
-    for (var bi = 0; bi < bindingsSymbols.length; bi++) {
-      const bks = bindingsSymbols[bi]
-      instance[serializersSym][bks] = options.serializers[bks]
-    }
-  } else instance[serializersSym] = serializers
   if (options.hasOwnProperty('formatters')) {
     const { level, bindings: chindings, log } = options.formatters
     instance[formattersSym] = buildFormatters(
@@ -124,16 +94,6 @@ function child (bindings, options) {
     assertNoLevelCollisions(this.levels, options.customLevels)
     instance.levels = mappings(options.customLevels, instance[useOnlyCustomLevelsSym])
     genLsCache(instance)
-  }
-
-  // redact must place before asChindings and only replace if exist
-  if ((typeof options.redact === 'object' && options.redact !== null) || Array.isArray(options.redact)) {
-    instance.redact = options.redact // replace redact directly
-    const stringifiers = redaction(instance.redact, stringify)
-    const formatOpts = { stringify: stringifiers[redactFmtSym] }
-    instance[stringifySym] = stringify
-    instance[stringifiersSym] = stringifiers
-    instance[formatOptsSym] = formatOpts
   }
 
   if (typeof options.msgPrefix === 'string') {
@@ -179,7 +139,7 @@ function write (_obj, msg, num) {
   const mixin = this[mixinSym]
   const errorKey = this[errorKeySym]
   const messageKey = this[messageKeySym]
-  const mixinMergeStrategy = this[mixinMergeStrategySym] || defaultMixinMergeStrategy
+  const mixinMergeStrategy = defaultMixinMergeStrategy
   let obj
 
   if (_obj === undefined || _obj === null) {

@@ -5,7 +5,7 @@ const pino = require('./core/pino')
  */
 
 /**
- * @typedef {Pick<pino.LoggerOptions, 'level' | 'transport' | 'customLevels' | 'crlf' | 'formatters' | 'enabled' | 'msgPrefix' | 'serializers' | 'name' | 'timestamp'> & { attributes?: object }} LoggerGlobalOptions
+ * @typedef {Pick<pino.LoggerOptions, 'level' | 'transport' | 'customLevels' | 'crlf' | 'formatters' | 'enabled' | 'msgPrefix' | 'name' | 'timestamp'> & { attributes?: object }} LoggerGlobalOptions
  */
 
 const kInternalConstructor = Symbol('kInternalConstructor')
@@ -58,7 +58,7 @@ function setOptions(options) {
   options = Object.assign({}, buildDefaultOptionsFromEnvironment(), options)
 
   const attributes = options.attributes
-  const validProperties = ['level', 'transport', 'customLevels', 'crlf', 'hooks', 'formatters', 'depthLimit', 'edgeLimit', 'enabled', 'msgPrefix', 'serializers', 'safe', 'name', 'timestamp']
+  const validProperties = ['level', 'transport', 'customLevels', 'crlf', 'formatters', 'enabled', 'msgPrefix', 'name', 'timestamp']
 
   for (const key of Object.keys(options)) {
     if (!validProperties.includes(key)) {
@@ -69,7 +69,7 @@ function setOptions(options) {
   pinoInstance = pino({
     ...options,
     ...attributes && {
-      mixin: () => attributes
+      attribute: () => attributes
     },
     customLevels: {
       debug: 0

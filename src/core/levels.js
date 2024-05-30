@@ -6,15 +6,14 @@ const {
   useOnlyCustomLevelsSym,
   streamSym,
   formattersSym,
-  hooksSym,
   levelCompSym
 } = require('./symbols')
 const { noop, genLog } = require('./tools')
 const { DEFAULT_LEVELS, SORTING_ORDER } = require('./constants')
 
 const levelMethods = {
-  fatal: (hook) => {
-    const logFatal = genLog(DEFAULT_LEVELS.fatal, hook)
+  fatal: () => {
+    const logFatal = genLog(DEFAULT_LEVELS.fatal)
     return function (...args) {
       const stream = this[streamSym]
       logFatal.call(this, ...args)
@@ -27,11 +26,11 @@ const levelMethods = {
       }
     }
   },
-  error: (hook) => genLog(DEFAULT_LEVELS.error, hook),
-  warn: (hook) => genLog(DEFAULT_LEVELS.warn, hook),
-  info: (hook) => genLog(DEFAULT_LEVELS.info, hook),
-  debug: (hook) => genLog(DEFAULT_LEVELS.debug, hook),
-  trace: (hook) => genLog(DEFAULT_LEVELS.trace, hook)
+  error: () => genLog(DEFAULT_LEVELS.error),
+  warn: () => genLog(DEFAULT_LEVELS.warn),
+  info: () => genLog(DEFAULT_LEVELS.info),
+  debug: () => genLog(DEFAULT_LEVELS.debug),
+  trace: () => genLog(DEFAULT_LEVELS.trace)
 }
 
 const nums = Object.keys(DEFAULT_LEVELS).reduce((o, k) => {
@@ -85,14 +84,13 @@ function setLevel (level) {
   const levelVal = this[levelValSym] = values[level]
   const useOnlyCustomLevelsVal = this[useOnlyCustomLevelsSym]
   const levelComparison = this[levelCompSym]
-  const hook = this[hooksSym].logMethod
 
   for (const key in values) {
     if (levelComparison(values[key], levelVal) === false) {
       this[key] = noop
       continue
     }
-    this[key] = isStandardLevel(key, useOnlyCustomLevelsVal) ? levelMethods[key](hook) : genLog(values[key], hook)
+    this[key] = isStandardLevel(key, useOnlyCustomLevelsVal) ? levelMethods[key]() : genLog(values[key])
   }
 
   this.emit(

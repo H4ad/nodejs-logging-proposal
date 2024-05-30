@@ -3,11 +3,9 @@
 const os = require('os')
 const stdSerializers = require('pino-std-serializers')
 const caller = require('./caller')
-const redaction = require('./redaction')
 const time = require('./time')
 const proto = require('./proto')
 const symbols = require('./symbols')
-const { configure } = require('safe-stable-stringify')
 const { assertDefaultLevelFound, mappings, genLsCache, genLevelComparison, assertLevelComparison } = require('./levels')
 const { DEFAULT_LEVELS, SORTING_ORDER } = require('./constants')
 const {
@@ -21,14 +19,10 @@ const {
 } = require('./tools')
 const {
   chindingsSym,
-  redactFmtSym,
-  serializersSym,
   timeSym,
   timeSliceIndexSym,
   streamSym,
   stringifySym,
-  stringifySafeSym,
-  stringifiersSym,
   setLevelSym,
   endSym,
   formatOptsSym,
@@ -39,9 +33,7 @@ const {
   levelCompSym,
   useOnlyCustomLevelsSym,
   formattersSym,
-  hooksSym,
   nestedKeyStrSym,
-  mixinMergeStrategySym,
   msgPrefixSym
 } = symbols
 const { epochTime, nullTime } = time
@@ -61,36 +53,29 @@ const defaultOptions = {
     err: defaultErrorSerializer
   }),
   formatters: Object.assign(Object.create(null), {
-    bindings (bindings) {
+    bindings(bindings) {
       return bindings
     },
-    level (label, number) {
+    level(label, number) {
       return { level: number }
     }
   }),
-  hooks: {
-    logMethod: undefined
-  },
   timestamp: epochTime,
   name: undefined,
-  redact: null,
   customLevels: null,
   useOnlyCustomLevels: false,
-  depthLimit: 5,
-  edgeLimit: 100
+  stringify,
 }
 
 const normalize = createArgsNormalizer(defaultOptions)
 
 const serializers = Object.assign(Object.create(null), stdSerializers)
 
-function pino (...args) {
+function pino(...args) {
   const instance = {}
   const { opts, stream } = normalize(instance, caller(), ...args)
   const {
-    redact,
     crlf,
-    serializers,
     timestamp,
     messageKey,
     errorKey,
@@ -101,20 +86,12 @@ function pino (...args) {
     customLevels,
     levelComparison,
     mixin,
-    mixinMergeStrategy,
     useOnlyCustomLevels,
     formatters,
-    hooks,
-    depthLimit,
-    edgeLimit,
     onChild,
-    msgPrefix
+    msgPrefix,
+    stringify
   } = opts
-
-  const stringifySafe = configure({
-    maximumDepth: depthLimit,
-    maximumBreadth: edgeLimit
-  })
 
   const allFormatters = buildFormatters(
     formatters.level,
@@ -122,20 +99,11 @@ function pino (...args) {
     formatters.log
   )
 
-  const stringifyFn = stringify.bind({
-    [stringifySafeSym]: stringifySafe
-  })
-  const stringifiers = redact ? redaction(redact, stringifyFn) : {}
-  const formatOpts = redact
-    ? { stringify: stringifiers[redactFmtSym] }
-    : { stringify: stringifyFn }
+  const formatOpts = { stringify: stringify }
   const end = '}' + (crlf ? '\r\n' : '\n')
   const coreChindings = asChindings.bind(null, {
     [chindingsSym]: '',
-    [serializersSym]: serializers,
-    [stringifiersSym]: stringifiers,
     [stringifySym]: stringify,
-    [stringifySafeSym]: stringifySafe,
     [formattersSym]: allFormatters
   })
 
@@ -175,8 +143,6 @@ function pino (...args) {
     [timeSym]: time,
     [timeSliceIndexSym]: timeSliceIndex,
     [stringifySym]: stringify,
-    [stringifySafeSym]: stringifySafe,
-    [stringifiersSym]: stringifiers,
     [endSym]: end,
     [formatOptsSym]: formatOpts,
     [messageKeySym]: messageKey,
@@ -184,12 +150,9 @@ function pino (...args) {
     [nestedKeySym]: nestedKey,
     // protect against injection
     [nestedKeyStrSym]: nestedKey ? `,${JSON.stringify(nestedKey)}:{` : '',
-    [serializersSym]: serializers,
     [mixinSym]: mixin,
-    [mixinMergeStrategySym]: mixinMergeStrategy,
     [chindingsSym]: chindings,
     [formattersSym]: allFormatters,
-    [hooksSym]: hooks,
     silent: noop,
     onChild,
     [msgPrefixSym]: msgPrefix

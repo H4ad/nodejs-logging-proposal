@@ -51,13 +51,9 @@ The options for this method are the following:
 - `options.transport`: See more about transport [here](https://github.com/pinojs/pino/blob/main/docs/transports.md).
 - `options.customLevels`: See more about custom levels [here](https://github.com/pinojs/pino/blob/main/docs/api.md#customlevels-object)
 - `options.crlf`: Set to true to logs newline delimited JSON with \r\n instead of \n.
-- `options.hooks`: See more about hooks [here](https://github.com/pinojs/pino/blob/main/docs/api.md#hooks-object)
 - `options.formatters`: See more about formatters [here](https://github.com/pinojs/pino/blob/main/docs/api.md#formatters-object)
-- `options.depthLimit`: Option to limit stringification at a specific nesting depth when logging circular objects.
-- `options.edgeLimit`: Option to limit stringification of properties/elements when logging a specific object/array with circular references.
 - `options.enabled`: Set to false to disable logging.
 - `options.msgPrefix`: The msgPrefix property allows you to specify a prefix for every message of the logger and its children.
-- `options.serializers`: See more about serializers [here](https://github.com/pinojs/pino/blob/main/docs/api.md#serializers-object)
 - `options.safe`: Avoid errors caused by circular references in the object tree.
 
 This method also can be configured with the following environment variables:

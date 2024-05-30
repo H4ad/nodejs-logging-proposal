@@ -10,13 +10,9 @@ const {
   lsCacheSym,
   chindingsSym,
   writeSym,
-  serializersSym,
   formatOptsSym,
   endSym,
-  stringifiersSym,
   stringifySym,
-  stringifySafeSym,
-  wildcardFirstSym,
   nestedKeySym,
   formattersSym,
   messageKeySym,
@@ -27,17 +23,13 @@ const {
 const { isMainThread } = require('worker_threads')
 const transport = require('./transport')
 
-function noop () {
+function noop() {
 }
 
-function genLog (level, hook) {
-  if (!hook) return LOG
+function genLog(level) {
+  return LOG
 
-  return function hookWrappedLog (...args) {
-    hook.call(this, args, LOG, level)
-  }
-
-  function LOG (o, ...n) {
+  function LOG(o, ...n) {
     if (typeof o === 'object') {
       let msg = o
       if (o !== null) {
@@ -73,43 +65,15 @@ function genLog (level, hook) {
   }
 }
 
-// magically escape strings for json
-// relying on their charCodeAt
-// everything below 32 needs JSON.stringify()
-// 34 and 92 happens all the time, so we
-// have a fast case for them
-function asString (str) {
-  let result = ''
-  let last = 0
-  let found = false
-  let point = 255
-  const l = str.length
-  if (l > 100) {
-    return JSON.stringify(str)
-  }
-  for (var i = 0; i < l && point >= 32; i++) {
-    point = str.charCodeAt(i)
-    if (point === 34 || point === 92) {
-      result += str.slice(last, i) + '\\'
-      last = i
-      found = true
-    }
-  }
-  if (!found) {
-    result = str
-  } else {
-    result += str.slice(last)
-  }
-  return point < 32 ? JSON.stringify(str) : '"' + result + '"'
+function asString(str) {
+  // TODO(h4ad): Should we get back the extreme performance of the old version?
+  return JSON.stringify(str)
 }
 
-function asJson (obj, msg, num, time) {
+function asJson(obj, msg, num, time) {
   const stringify = this[stringifySym]
-  const stringifySafe = this[stringifySafeSym]
-  const stringifiers = this[stringifiersSym]
   const end = this[endSym]
   const chindings = this[chindingsSym]
-  const serializers = this[serializersSym]
   const formatters = this[formattersSym]
   const messageKey = this[messageKeySym]
   const errorKey = this[errorKeySym]
@@ -123,19 +87,12 @@ function asJson (obj, msg, num, time) {
   if (formatters.log) {
     obj = formatters.log(obj)
   }
-  const wildcardStringifier = stringifiers[wildcardFirstSym]
+
   let propStr = ''
+
   for (const key in obj) {
     value = obj[key]
     if (Object.prototype.hasOwnProperty.call(obj, key) && value !== undefined) {
-      if (serializers[key]) {
-        value = serializers[key](value)
-      } else if (key === errorKey && serializers.err) {
-        value = serializers.err(value)
-      }
-
-      const stringifier = stringifiers[key] || wildcardStringifier
-
       switch (typeof value) {
         case 'undefined':
         case 'function':
@@ -147,13 +104,12 @@ function asJson (obj, msg, num, time) {
           }
         // this case explicitly falls through to the next one
         case 'boolean':
-          if (stringifier) value = stringifier(value)
           break
         case 'string':
-          value = (stringifier || asString)(value)
+          value = asString(value)
           break
         default:
-          value = (stringifier || stringify)(value, stringifySafe)
+          value = stringify(value)
       }
       if (value === undefined) continue
       const strKey = asString(key)
@@ -163,28 +119,25 @@ function asJson (obj, msg, num, time) {
 
   let msgStr = ''
   if (msg !== undefined) {
-    value = serializers[messageKey] ? serializers[messageKey](msg) : msg
-    const stringifier = stringifiers[messageKey] || wildcardStringifier
+    value = msg
 
     switch (typeof value) {
       case 'function':
         break
       case 'number':
-        /* eslint no-fallthrough: "off" */
         if (Number.isFinite(value) === false) {
           value = null
         }
       // this case explicitly falls through to the next one
       case 'boolean':
-        if (stringifier) value = stringifier(value)
         msgStr = ',"' + messageKey + '":' + value
         break
       case 'string':
-        value = (stringifier || asString)(value)
+        value = asString(value)
         msgStr = ',"' + messageKey + '":' + value
         break
       default:
-        value = (stringifier || stringify)(value, stringifySafe)
+        value = stringify(value)
         msgStr = ',"' + messageKey + '":' + value
     }
   }
@@ -198,14 +151,10 @@ function asJson (obj, msg, num, time) {
   }
 }
 
-function asChindings (instance, bindings) {
+function asChindings(instance, bindings) {
   let value
   let data = instance[chindingsSym]
   const stringify = instance[stringifySym]
-  const stringifySafe = instance[stringifySafeSym]
-  const stringifiers = instance[stringifiersSym]
-  const wildcardStringifier = stringifiers[wildcardFirstSym]
-  const serializers = instance[serializersSym]
   const formatter = instance[formattersSym].bindings
   bindings = formatter(bindings)
 
@@ -218,8 +167,7 @@ function asChindings (instance, bindings) {
       bindings.hasOwnProperty(key) &&
       value !== undefined
     if (valid === true) {
-      value = serializers[key] ? serializers[key](value) : value
-      value = (stringifiers[key] || wildcardStringifier || stringify)(value, stringifySafe)
+      value = stringify(value)
       if (value === undefined) continue
       data += ',"' + key + '":' + value
     }
@@ -227,13 +175,13 @@ function asChindings (instance, bindings) {
   return data
 }
 
-function hasBeenTampered (stream) {
+function hasBeenTampered(stream) {
   return stream.write !== stream.constructor.prototype.write
 }
 
 const hasNodeCodeCoverage = process.env.NODE_V8_COVERAGE || process.env.V8_COVERAGE
 
-function buildSafeSonicBoom (opts) {
+function buildSafeSonicBoom(opts) {
   const stream = new SonicBoom(opts)
   stream.on('error', filterBrokenPipe)
   // If we are sync: false, we must flush on exit
@@ -242,13 +190,13 @@ function buildSafeSonicBoom (opts) {
   if (!hasNodeCodeCoverage && !opts.sync && isMainThread) {
     onExit.register(stream, autoEnd)
 
-    stream.on('close', function () {
+    stream.on('close', function() {
       onExit.unregister(stream)
     })
   }
   return stream
 
-  function filterBrokenPipe (err) {
+  function filterBrokenPipe(err) {
     // Impossible to replicate across all operating systems
     /* istanbul ignore next */
     if (err.code === 'EPIPE') {
@@ -266,7 +214,7 @@ function buildSafeSonicBoom (opts) {
   }
 }
 
-function autoEnd (stream, eventName) {
+function autoEnd(stream, eventName) {
   // This check is needed only on some platforms
   /* istanbul ignore next */
   if (stream.destroyed) {
@@ -276,7 +224,7 @@ function autoEnd (stream, eventName) {
   if (eventName === 'beforeExit') {
     // We still have an event loop, let's use it
     stream.flush()
-    stream.on('drain', function () {
+    stream.on('drain', function() {
       stream.end()
     })
   } else {
@@ -287,8 +235,8 @@ function autoEnd (stream, eventName) {
   }
 }
 
-function createArgsNormalizer (defaultOptions) {
-  return function normalizeArgs (instance, caller, opts = {}, stream) {
+function createArgsNormalizer(defaultOptions) {
+  return function normalizeArgs(instance, caller, opts = {}, stream) {
     // support stream as a string
     if (typeof opts === 'string') {
       stream = buildSafeSonicBoom({ dest: opts })
@@ -317,13 +265,14 @@ function createArgsNormalizer (defaultOptions) {
         stream = transport({ caller, ...opts.transport, levels: customLevels })
       }
     }
+
+    if (opts.stringify && typeof opts.stringify !== 'function') {
+      throw new Error('The "stringify" option must be a function')
+    }
+
     opts = Object.assign({}, defaultOptions, opts)
     opts.serializers = Object.assign({}, defaultOptions.serializers, opts.serializers)
     opts.formatters = Object.assign({}, defaultOptions.formatters, opts.formatters)
-
-    if (opts.prettyPrint) {
-      throw new Error('prettyPrint option is no longer supported, see the pino-pretty package (https://github.com/pinojs/pino-pretty)')
-    }
 
     const { enabled, onChild } = opts
     if (enabled === false) opts.level = 'silent'
@@ -341,20 +290,15 @@ function createArgsNormalizer (defaultOptions) {
   }
 }
 
-function stringify (obj, stringifySafeFn) {
+function stringify(obj) {
   try {
     return JSON.stringify(obj)
   } catch (_) {
-    try {
-      const stringify = stringifySafeFn || this[stringifySafeSym]
-      return stringify(obj)
-    } catch (_) {
-      return '"[unable to serialize, circular reference is too complex to analyze]"'
-    }
+    return '"[unable to serialize, probably a circular reference]"'
   }
 }
 
-function buildFormatters (level, bindings, log) {
+function buildFormatters(level, bindings, log) {
   return {
     level,
     bindings,
@@ -370,7 +314,7 @@ function buildFormatters (level, bindings, log) {
  *
  * @returns {Number}
  */
-function normalizeDestFileDescriptor (destination) {
+function normalizeDestFileDescriptor(destination) {
   const fd = Number(destination)
   if (typeof destination === 'string' && Number.isFinite(fd)) {
     return fd
