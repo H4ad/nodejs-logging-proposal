@@ -302,35 +302,12 @@ function buildFormatters(level, bindings, log) {
   }
 }
 
-/**
- * Convert a string integer file descriptor to a proper native integer
- * file descriptor.
- *
- * @param {string} destination The file descriptor string to attempt to convert.
- *
- * @returns {Number}
- */
-function normalizeDestFileDescriptor(destination) {
-  const fd = Number(destination)
-  if (typeof destination === 'string' && Number.isFinite(fd)) {
-    return fd
-  }
-  // destination could be undefined if we are in a worker
-  if (destination === undefined) {
-    // This is stdout in UNIX systems
-    return 1
-  }
-  return destination
-}
-
 module.exports = {
   noop,
-  buildSafeSonicBoom,
   asChindings,
   asJson,
   genLog,
   createArgsNormalizer,
   stringify,
   buildFormatters,
-  normalizeDestFileDescriptor
 }

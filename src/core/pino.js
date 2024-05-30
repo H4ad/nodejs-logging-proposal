@@ -10,10 +10,8 @@ const { DEFAULT_LEVELS, SORTING_ORDER } = require('./constants')
 const {
   createArgsNormalizer,
   asChindings,
-  buildSafeSonicBoom,
   buildFormatters,
   stringify,
-  normalizeDestFileDescriptor,
   noop
 } = require('./tools')
 const {
@@ -147,15 +145,6 @@ function pino(...args) {
 }
 
 module.exports = pino
-
-module.exports.destination = (dest = process.stdout.fd) => {
-  if (typeof dest === 'object') {
-    dest.dest = normalizeDestFileDescriptor(dest.dest || process.stdout.fd)
-    return buildSafeSonicBoom(dest)
-  } else {
-    return buildSafeSonicBoom({ dest: normalizeDestFileDescriptor(dest), minLength: 0 })
-  }
-}
 
 module.exports.levels = mappings()
 
