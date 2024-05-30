@@ -19,7 +19,6 @@
   "dependencies": {
     "atomic-sleep": "1.0.0",
     "on-exit-leak-free": "2.1.2",
-    "pino-std-serializers": "7.0.0",
     "sonic-boom": "4.0.1",
     "split2": "4.2.0",
     "thread-stream": "3.0.1"
