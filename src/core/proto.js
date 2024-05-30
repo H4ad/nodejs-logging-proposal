@@ -97,6 +97,7 @@ function child(bindings, options) {
       formatters.log
     )
   }
+
   if (options.hasOwnProperty('customLevels') === true) {
     assertNoLevelCollisions(this.levels, options.customLevels)
     instance.levels = mappings(options.customLevels, instance[useOnlyCustomLevelsSym])
@@ -110,7 +111,6 @@ function child(bindings, options) {
   instance[chindingsSym] = asChindings(instance, bindings)
   const childLevel = options.level || this.level
   instance[setLevelSym](childLevel)
-  this.onChild(instance)
   return instance
 }
 

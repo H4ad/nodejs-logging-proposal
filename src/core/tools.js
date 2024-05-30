@@ -271,9 +271,8 @@ function createArgsNormalizer(defaultOptions) {
     opts.serializers = Object.assign({}, defaultOptions.serializers, opts.serializers)
     opts.formatters = Object.assign({}, defaultOptions.formatters, opts.formatters)
 
-    const { enabled, onChild } = opts
+    const { enabled } = opts
     if (enabled === false) opts.level = 'silent'
-    if (!onChild) opts.onChild = noop
     if (!stream) {
       if (!hasBeenTampered(process.stdout)) {
         // If process.stdout.fd is undefined, it means that we are running

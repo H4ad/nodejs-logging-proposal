@@ -80,7 +80,6 @@ function pino(...args) {
     levelComparison,
     useOnlyCustomLevels,
     formatters,
-    onChild,
     msgPrefix,
     stringify
   } = opts
@@ -142,7 +141,6 @@ function pino(...args) {
     [chindingsSym]: chindings,
     [formattersSym]: allFormatters,
     silent: noop,
-    onChild,
     [msgPrefixSym]: msgPrefix
   })
 
