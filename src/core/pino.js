@@ -11,7 +11,7 @@ const {
   createArgsNormalizer,
   asChindings,
   buildFormatters,
-  stringify,
+  stringify: defaultStringify,
   noop
 } = require('./tools')
 const {
@@ -52,7 +52,7 @@ const defaultOptions = {
   name: undefined,
   customLevels: null,
   useOnlyCustomLevels: false,
-  stringify,
+  stringify: defaultStringify,
 }
 
 const normalize = createArgsNormalizer(defaultOptions)
