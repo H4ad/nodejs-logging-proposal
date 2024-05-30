@@ -2,8 +2,6 @@
 
 /* eslint no-prototype-builtins: 0 */
 
-const format = require('quick-format-unescaped')
-const { mapHttpRequest, mapHttpResponse } = require('pino-std-serializers')
 const SonicBoom = require('sonic-boom')
 const onExit = require('on-exit-leak-free')
 const {
@@ -20,6 +18,7 @@ const {
 } = require('./symbols')
 const { isMainThread } = require('worker_threads')
 const transport = require('./transport')
+const { format } = require('node:util')
 
 function noop() {
 }
@@ -30,13 +29,7 @@ function genLog(level) {
   function LOG(o, ...n) {
     if (typeof o === 'object') {
       let msg = o
-      if (o !== null) {
-        if (o.method && o.headers && o.socket) {
-          o = mapHttpRequest(o)
-        } else if (typeof o.setHeader === 'function') {
-          o = mapHttpResponse(o)
-        }
-      }
+      // TODO(h4ad): add back the serializers for http req and res
       let formatParams
       if (msg === null && n.length === 0) {
         formatParams = [null]
