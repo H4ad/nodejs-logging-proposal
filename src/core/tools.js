@@ -18,7 +18,7 @@ const {
 } = require('./symbols')
 const { isMainThread } = require('worker_threads')
 const transport = require('./transport')
-const { format } = require('node:util')
+const { format, formatWithOptions } = require('node:util')
 
 function noop() {
 }
@@ -42,7 +42,7 @@ function genLog(level) {
       if (typeof this[msgPrefixSym] === 'string' && msg !== undefined && msg !== null) {
         msg = this[msgPrefixSym] + msg
       }
-      this[writeSym](o, format(msg, formatParams, this[formatOptsSym]), level)
+      this[writeSym](o, formatWithOptions(this[formatOptsSym], msg, ...formatParams), level)
     } else {
       let msg = o === undefined ? n.shift() : o
 
@@ -51,7 +51,7 @@ function genLog(level) {
       if (typeof this[msgPrefixSym] === 'string' && msg !== undefined && msg !== null) {
         msg = this[msgPrefixSym] + msg
       }
-      this[writeSym](null, format(msg, n, this[formatOptsSym]), level)
+      this[writeSym](null, formatWithOptions(this[formatOptsSym], msg, ...n), level)
     }
   }
 }

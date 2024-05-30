@@ -81,7 +81,6 @@ function pino(...args) {
     formatters.log
   )
 
-  const formatOpts = { stringify: stringify }
   const end = '}' + (crlf ? '\r\n' : '\n')
   const coreChindings = asChindings.bind(null, {
     [chindingsSym]: '',
@@ -125,7 +124,7 @@ function pino(...args) {
     [timeSliceIndexSym]: timeSliceIndex,
     [stringifySym]: stringify,
     [endSym]: end,
-    [formatOptsSym]: formatOpts,
+    [formatOptsSym]: {}, // TODO(h4ad): Remove or expose to the user
     [nestedKeySym]: nestedKey,
     // protect against injection
     [nestedKeyStrSym]: nestedKey ? `,${JSON.stringify(nestedKey)}:{` : '',

@@ -18,7 +18,7 @@ describe('log by level', () => {
 
       const data = await once(stream, 'data')
 
-      assert.strictEqual(data.msg, 'test')
+      assert.strictEqual(data.message, 'test')
     })
   }
 })
