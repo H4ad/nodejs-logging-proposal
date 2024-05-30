@@ -6,7 +6,6 @@ const levelValSym = Symbol('pino.levelVal')
 const levelCompSym = Symbol('pino.levelComp')
 const useLevelLabelsSym = Symbol('pino.useLevelLabels')
 const useOnlyCustomLevelsSym = Symbol('pino.useOnlyCustomLevels')
-const mixinSym = Symbol('pino.mixin')
 
 const lsCacheSym = Symbol('pino.lsCache')
 const chindingsSym = Symbol('pino.chindings')
@@ -37,7 +36,6 @@ module.exports = {
   levelValSym,
   levelCompSym,
   useLevelLabelsSym,
-  mixinSym,
   lsCacheSym,
   chindingsSym,
   asJsonSym,

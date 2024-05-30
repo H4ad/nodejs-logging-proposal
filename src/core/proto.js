@@ -10,7 +10,6 @@ const {
   getLevelSym,
   chindingsSym,
   parsedChindingsSym,
-  mixinSym,
   asJsonSym,
   writeSym,
   timeSym,
@@ -122,24 +121,10 @@ function setBindings (newBindings) {
   delete this[parsedChindingsSym]
 }
 
-/**
- * Default strategy for creating `mergeObject` from arguments and the result from `mixin()`.
- * Fields from `mergeObject` have higher priority in this strategy.
- *
- * @param {Object} mergeObject The object a user has supplied to the logging function.
- * @param {Object} mixinObject The result of the `mixin` method.
- * @return {Object}
- */
-function defaultMixinMergeStrategy (mergeObject, mixinObject) {
-  return Object.assign(mixinObject, mergeObject)
-}
-
 function write (_obj, msg, num) {
   const t = this[timeSym]()
-  const mixin = this[mixinSym]
   const errorKey = this[errorKeySym]
   const messageKey = this[messageKeySym]
-  const mixinMergeStrategy = defaultMixinMergeStrategy
   let obj
 
   if (_obj === undefined || _obj === null) {
@@ -154,10 +139,6 @@ function write (_obj, msg, num) {
     if (msg === undefined && _obj[messageKey] === undefined && _obj[errorKey]) {
       msg = _obj[errorKey].message
     }
-  }
-
-  if (mixin) {
-    obj = mixinMergeStrategy(obj, mixin(obj, num, this))
   }
 
   const s = this[asJsonSym](obj, msg, num, t)

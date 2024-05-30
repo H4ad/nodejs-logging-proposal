@@ -29,7 +29,6 @@ const {
   messageKeySym,
   errorKeySym,
   nestedKeySym,
-  mixinSym,
   levelCompSym,
   useOnlyCustomLevelsSym,
   formattersSym,
@@ -85,7 +84,6 @@ function pino(...args) {
     level,
     customLevels,
     levelComparison,
-    mixin,
     useOnlyCustomLevels,
     formatters,
     onChild,
@@ -122,7 +120,6 @@ function pino(...args) {
   const timeSliceIndex = time().indexOf(':') + 1
 
   if (useOnlyCustomLevels && !customLevels) throw Error('customLevels is required if useOnlyCustomLevels is set true')
-  if (mixin && typeof mixin !== 'function') throw Error(`Unknown mixin type "${typeof mixin}" - expected "function"`)
   if (msgPrefix && typeof msgPrefix !== 'string') throw Error(`Unknown msgPrefix type "${typeof msgPrefix}" - expected "string"`)
 
   assertDefaultLevelFound(level, customLevels, useOnlyCustomLevels)
@@ -150,7 +147,6 @@ function pino(...args) {
     [nestedKeySym]: nestedKey,
     // protect against injection
     [nestedKeyStrSym]: nestedKey ? `,${JSON.stringify(nestedKey)}:{` : '',
-    [mixinSym]: mixin,
     [chindingsSym]: chindings,
     [formattersSym]: allFormatters,
     silent: noop,
