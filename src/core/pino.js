@@ -164,9 +164,6 @@ module.exports.destination = (dest = process.stdout.fd) => {
   }
 }
 
-module.exports.transport = require('./transport')
-module.exports.multistream = require('./multistream')
-
 module.exports.levels = mappings()
 module.exports.stdSerializers = serializers
 module.exports.stdTimeFunctions = Object.assign({}, time)
