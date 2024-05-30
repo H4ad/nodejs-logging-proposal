@@ -16,7 +16,6 @@ const {
   timeSliceIndexSym,
   streamSym,
   formattersSym,
-  errorKeySym,
   messageKeySym,
   useOnlyCustomLevelsSym,
   needsMetadataGsym,
@@ -123,21 +122,20 @@ function setBindings (newBindings) {
 
 function write (_obj, msg, num) {
   const t = this[timeSym]()
-  const errorKey = this[errorKeySym]
   const messageKey = this[messageKeySym]
   let obj
 
   if (_obj === undefined || _obj === null) {
     obj = {}
   } else if (_obj instanceof Error) {
-    obj = { [errorKey]: _obj }
+    obj = { error: _obj }
     if (msg === undefined) {
       msg = _obj.message
     }
   } else {
     obj = _obj
-    if (msg === undefined && _obj[messageKey] === undefined && _obj[errorKey]) {
-      msg = _obj[errorKey].message
+    if (msg === undefined && _obj[messageKey] === undefined && _obj.error) {
+      msg = _obj.error.message
     }
   }
 

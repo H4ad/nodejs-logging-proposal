@@ -98,9 +98,6 @@ function buildTransport(fn, opts = {}) {
       messageKey: {
         get() { return pinoConfig.messageKey }
       },
-      errorKey: {
-        get() { return pinoConfig.errorKey }
-      }
     })
 
     return configReceived.then(finish)

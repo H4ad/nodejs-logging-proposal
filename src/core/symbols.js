@@ -20,7 +20,6 @@ const stringifySym = Symbol('pino.stringify')
 const endSym = Symbol('pino.end')
 const formatOptsSym = Symbol('pino.formatOpts')
 const messageKeySym = Symbol('pino.messageKey')
-const errorKeySym = Symbol('pino.errorKey')
 const nestedKeySym = Symbol('pino.nestedKey')
 const nestedKeyStrSym = Symbol('pino.nestedKeyStr')
 const msgPrefixSym = Symbol('pino.msgPrefix')
@@ -47,7 +46,6 @@ module.exports = {
   endSym,
   formatOptsSym,
   messageKeySym,
-  errorKeySym,
   nestedKeySym,
   needsMetadataGsym,
   useOnlyCustomLevelsSym,

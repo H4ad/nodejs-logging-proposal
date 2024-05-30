@@ -16,7 +16,6 @@ const {
   nestedKeySym,
   formattersSym,
   messageKeySym,
-  errorKeySym,
   nestedKeyStrSym,
   msgPrefixSym
 } = require('./symbols')
@@ -76,7 +75,6 @@ function asJson(obj, msg, num, time) {
   const chindings = this[chindingsSym]
   const formatters = this[formattersSym]
   const messageKey = this[messageKeySym]
-  const errorKey = this[errorKeySym]
   let data = this[lsCacheSym][num] + time
 
   // we need the child bindings added to the output first so instance logged

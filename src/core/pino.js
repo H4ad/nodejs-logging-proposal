@@ -27,7 +27,6 @@ const {
   endSym,
   formatOptsSym,
   messageKeySym,
-  errorKeySym,
   nestedKeySym,
   levelCompSym,
   useOnlyCustomLevelsSym,
@@ -44,7 +43,6 @@ const defaultOptions = {
   levelComparison: SORTING_ORDER.ASC,
   levels: DEFAULT_LEVELS,
   messageKey: 'msg',
-  errorKey: 'err',
   nestedKey: null,
   enabled: true,
   base: { pid, hostname },
@@ -77,7 +75,6 @@ function pino(...args) {
     crlf,
     timestamp,
     messageKey,
-    errorKey,
     nestedKey,
     base,
     name,
@@ -126,7 +123,7 @@ function pino(...args) {
   const levels = mappings(customLevels, useOnlyCustomLevels)
 
   if (typeof stream.emit === 'function') {
-    stream.emit('message', { code: 'PINO_CONFIG', config: { levels, messageKey, errorKey } })
+    stream.emit('message', { code: 'PINO_CONFIG', config: { levels, messageKey } })
   }
 
   assertLevelComparison(levelComparison)
@@ -143,7 +140,6 @@ function pino(...args) {
     [endSym]: end,
     [formatOptsSym]: formatOpts,
     [messageKeySym]: messageKey,
-    [errorKeySym]: errorKey,
     [nestedKeySym]: nestedKey,
     // protect against injection
     [nestedKeyStrSym]: nestedKey ? `,${JSON.stringify(nestedKey)}:{` : '',
