@@ -26,10 +26,6 @@ async function loadTransportStreamBuilder(target) {
     }
   }
 
-  // Depending on how the default export is performed, and on how the code is
-  // transpiled, we may find cases of two nested "default" objects.
-  // See https://github.com/pinojs/pino/issues/1243#issuecomment-982774762
-  if (typeof fn === 'object') fn = fn.default
   if (typeof fn === 'object') fn = fn.default
   if (typeof fn !== 'function') throw Error('exported worker is not a function')
 
