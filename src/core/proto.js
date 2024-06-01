@@ -2,7 +2,6 @@
 
 /* eslint no-prototype-builtins: 0 */
 
-const { EventEmitter } = require('events')
 const {
   lsCacheSym,
   levelValSym,
@@ -60,8 +59,6 @@ const prototype = {
   [getLevelSym]: getLevel,
   [setLevelSym]: setLevel
 }
-
-Object.setPrototypeOf(prototype, EventEmitter.prototype)
 
 // exporting and consuming the prototype object using factory pattern fixes scoping issues with getters when serializing
 module.exports = function() {
