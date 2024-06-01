@@ -16,7 +16,6 @@ const {
   timeSliceIndexSym,
   streamSym,
   formattersSym,
-  useOnlyCustomLevelsSym,
   needsMetadataGsym,
   msgPrefixSym
 } = require('./symbols')
@@ -24,16 +23,12 @@ const {
   getLevel,
   setLevel,
   isLevelEnabled,
-  mappings,
   initialLsCache,
-  genLsCache,
-  assertNoLevelCollisions
 } = require('./levels')
 const {
   asChindings,
   asJson,
   buildFormatters,
-  stringify
 } = require('./tools')
 
 // note: use of class is satirical
@@ -96,12 +91,6 @@ function child(bindings, options) {
       resetChildingsFormatter,
       formatters.log
     )
-  }
-
-  if (options.hasOwnProperty('customLevels') === true) {
-    assertNoLevelCollisions(this.levels, options.customLevels)
-    instance.levels = mappings(options.customLevels, instance[useOnlyCustomLevelsSym])
-    genLsCache(instance)
   }
 
   if (typeof options.msgPrefix === 'string') {

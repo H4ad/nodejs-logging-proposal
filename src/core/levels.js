@@ -3,17 +3,16 @@
 const {
   lsCacheSym,
   levelValSym,
-  useOnlyCustomLevelsSym,
   streamSym,
   formattersSym,
-  levelCompSym
 } = require('./symbols')
 const { noop, genLog } = require('./tools')
-const { DEFAULT_LEVELS, SORTING_ORDER } = require('./constants')
+const { DEFAULT_LEVELS, DEFAULT_LEVEL_NAMES } = require('./constants')
 
 const levelMethods = {
-  fatal: () => {
-    const logFatal = genLog(DEFAULT_LEVELS.fatal)
+  silent: noop,
+  emergency: () => {
+    const logFatal = genLog(DEFAULT_LEVELS.emergency)
     return function (...args) {
       const stream = this[streamSym]
       logFatal.call(this, ...args)
@@ -26,11 +25,13 @@ const levelMethods = {
       }
     }
   },
+  alert: () => genLog(DEFAULT_LEVELS.alert),
+  critical: () => genLog(DEFAULT_LEVELS.critical),
   error: () => genLog(DEFAULT_LEVELS.error),
-  warn: () => genLog(DEFAULT_LEVELS.warn),
+  warning: () => genLog(DEFAULT_LEVELS.warning),
+  notice: () => genLog(DEFAULT_LEVELS.notice),
   info: () => genLog(DEFAULT_LEVELS.info),
   debug: () => genLog(DEFAULT_LEVELS.debug),
-  trace: () => genLog(DEFAULT_LEVELS.trace)
 }
 
 const nums = Object.keys(DEFAULT_LEVELS).reduce((o, k) => {
@@ -43,7 +44,7 @@ const initialLsCache = Object.keys(nums).reduce((o, k) => {
   return o
 }, {})
 
-function genLsCache (instance) {
+function genLsCache(instance) {
   const formatter = instance[formattersSym].level
   const { labels } = instance.levels
   const cache = {}
@@ -55,173 +56,64 @@ function genLsCache (instance) {
   return instance
 }
 
-function isStandardLevel (level, useOnlyCustomLevels) {
-  if (useOnlyCustomLevels) {
-    return false
-  }
-
-  switch (level) {
-    case 'fatal':
-    case 'error':
-    case 'warn':
-    case 'info':
-    case 'debug':
-    case 'trace':
-      return true
-    default:
-      return false
-  }
+function isStandardLevel(level) {
+  return DEFAULT_LEVEL_NAMES.includes(level)
 }
 
-function setLevel (level) {
+function levelComparison(level, configLevel) {
+  return level <= configLevel
+}
+
+function setLevel(level) {
   const { labels, values } = this.levels
   if (typeof level === 'number') {
     if (labels[level] === undefined) throw Error('unknown level value' + level)
     level = labels[level]
   }
   if (values[level] === undefined) throw Error('unknown level ' + level)
+
   const preLevelVal = this[levelValSym]
   const levelVal = this[levelValSym] = values[level]
-  const useOnlyCustomLevelsVal = this[useOnlyCustomLevelsSym]
-  const levelComparison = this[levelCompSym]
 
   for (const key in values) {
     if (levelComparison(values[key], levelVal) === false) {
       this[key] = noop
       continue
     }
-    this[key] = isStandardLevel(key, useOnlyCustomLevelsVal) ? levelMethods[key]() : genLog(values[key])
-  }
 
-  this.emit(
-    'level-change',
-    level,
-    levelVal,
-    labels[preLevelVal],
-    preLevelVal,
-    this
-  )
+    this[key] = levelMethods[key]()
+  }
 }
 
-function getLevel (level) {
+function getLevel(level) {
   const { levels, levelVal } = this
   // protection against potential loss of Pino scope from serializers (edge case with circular refs - https://github.com/pinojs/pino/issues/833)
   return (levels && levels.labels) ? levels.labels[levelVal] : ''
 }
 
-function isLevelEnabled (logLevel) {
+function isLevelEnabled(logLevel) {
   const { values } = this.levels
   const logLevelVal = values[logLevel]
-  return logLevelVal !== undefined && this[levelCompSym](logLevelVal, this[levelValSym])
+
+  return logLevelVal !== undefined && levelComparison(logLevelVal, this[levelValSym])
 }
 
-/**
- * Determine if the given `current` level is enabled by comparing it
- * against the current threshold (`expected`).
- *
- * @param {SORTING_ORDER} direction comparison direction "ASC" or "DESC"
- * @param {number} current current log level number representation
- * @param {number} expected threshold value to compare with
- * @returns {boolean}
- */
-function compareLevel (direction, current, expected) {
-  if (direction === SORTING_ORDER.DESC) {
-    return current <= expected
-  }
+function getLevelsConfig() {
+  const labels = DEFAULT_LEVEL_NAMES.reduce((acc, levelName) => {
+    acc[DEFAULT_LEVELS[levelName]] = levelName
+    return acc
+  }, {})
 
-  return current >= expected
-}
+  const values = DEFAULT_LEVELS
 
-/**
- * Create a level comparison function based on `levelComparison`
- * it could a default function which compares levels either in "ascending" or "descending" order or custom comparison function
- *
- * @param {SORTING_ORDER | Function} levelComparison sort levels order direction or custom comparison function
- * @returns Function
- */
-function genLevelComparison (levelComparison) {
-  if (typeof levelComparison === 'string') {
-    return compareLevel.bind(null, levelComparison)
-  }
-
-  return levelComparison
-}
-
-function mappings (customLevels = null, useOnlyCustomLevels = false) {
-  const customNums = customLevels
-    /* eslint-disable */
-    ? Object.keys(customLevels).reduce((o, k) => {
-        o[customLevels[k]] = k
-        return o
-      }, {})
-    : null
-    /* eslint-enable */
-
-  const labels = Object.assign(
-    Object.create(Object.prototype, { Infinity: { value: 'silent' } }),
-    useOnlyCustomLevels ? null : nums,
-    customNums
-  )
-  const values = Object.assign(
-    Object.create(Object.prototype, { silent: { value: Infinity } }),
-    useOnlyCustomLevels ? null : DEFAULT_LEVELS,
-    customLevels
-  )
   return { labels, values }
 }
 
-function assertDefaultLevelFound (defaultLevel, customLevels, useOnlyCustomLevels) {
-  if (typeof defaultLevel === 'number') {
-    const values = [].concat(
-      Object.keys(customLevels || {}).map(key => customLevels[key]),
-      useOnlyCustomLevels ? [] : Object.keys(nums).map(level => +level),
-      Infinity
-    )
-    if (!values.includes(defaultLevel)) {
-      throw Error(`default level:${defaultLevel} must be included in custom levels`)
-    }
+function assertDefaultLevelFound(defaultLevel) {
+  if (isStandardLevel(defaultLevel))
     return
-  }
 
-  const labels = Object.assign(
-    Object.create(Object.prototype, { silent: { value: Infinity } }),
-    useOnlyCustomLevels ? null : DEFAULT_LEVELS,
-    customLevels
-  )
-  if (!(defaultLevel in labels)) {
-    throw Error(`default level:${defaultLevel} must be included in custom levels`)
-  }
-}
-
-function assertNoLevelCollisions (levels, customLevels) {
-  const { labels, values } = levels
-  for (const k in customLevels) {
-    if (k in values) {
-      throw Error('levels cannot be overridden')
-    }
-    if (customLevels[k] in labels) {
-      throw Error('pre-existing level values cannot be used for new levels')
-    }
-  }
-}
-
-/**
- * Validates whether `levelComparison` is correct
- *
- * @throws Error
- * @param {SORTING_ORDER | Function} levelComparison - value to validate
- * @returns
- */
-function assertLevelComparison (levelComparison) {
-  if (typeof levelComparison === 'function') {
-    return
-  }
-
-  if (typeof levelComparison === 'string' && Object.values(SORTING_ORDER).includes(levelComparison)) {
-    return
-  }
-
-  throw new Error('Levels comparison should be one of "ASC", "DESC" or "function" type')
+  throw Error(`unknown level ${defaultLevel}, possible levels are: ${DEFAULT_LEVEL_NAMES.join(', ')}`)
 }
 
 module.exports = {
@@ -231,9 +123,6 @@ module.exports = {
   getLevel,
   setLevel,
   isLevelEnabled,
-  mappings,
-  assertNoLevelCollisions,
+  mappings: getLevelsConfig,
   assertDefaultLevelFound,
-  genLevelComparison,
-  assertLevelComparison
 }

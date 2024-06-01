@@ -18,7 +18,7 @@ const {
 } = require('./symbols')
 const { isMainThread } = require('worker_threads')
 const transport = require('./transport')
-const { format, formatWithOptions } = require('node:util')
+const { formatWithOptions } = require('node:util')
 
 function noop() {
 }
@@ -153,7 +153,6 @@ function asChindings(instance, bindings) {
     const valid = key !== 'level' &&
       key !== 'serializers' &&
       key !== 'formatters' &&
-      key !== 'customLevels' &&
       bindings.hasOwnProperty(key) &&
       value !== undefined
     if (valid === true) {
@@ -180,7 +179,7 @@ function buildSafeSonicBoom(opts) {
   if (!hasNodeCodeCoverage && !opts.sync && isMainThread) {
     onExit.register(stream, autoEnd)
 
-    stream.on('close', function() {
+    stream.on('close', function () {
       onExit.unregister(stream)
     })
   }
@@ -214,7 +213,7 @@ function autoEnd(stream, eventName) {
   if (eventName === 'beforeExit') {
     // We still have an event loop, let's use it
     stream.flush()
-    stream.on('drain', function() {
+    stream.on('drain', function () {
       stream.end()
     })
   } else {
@@ -248,11 +247,7 @@ function createArgsNormalizer(defaultOptions) {
           throw Error('option.transport.targets do not allow custom level formatters')
         }
 
-        let customLevels
-        if (opts.customLevels) {
-          customLevels = opts.useOnlyCustomLevels ? opts.customLevels : Object.assign({}, opts.levels, opts.customLevels)
-        }
-        stream = transport({ caller, ...opts.transport, levels: customLevels })
+        stream = transport({ caller, ...opts.transport })
       }
     }
 

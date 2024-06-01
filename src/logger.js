@@ -1,3 +1,4 @@
+const { hostname } = require('os')
 const pino = require('./core/pino')
 
 /**
@@ -5,7 +6,7 @@ const pino = require('./core/pino')
  */
 
 /**
- * @typedef {Pick<pino.LoggerOptions, 'level' | 'transport' | 'customLevels' | 'crlf' | 'formatters' | 'enabled' | 'msgPrefix' | 'name' | 'timestamp'> & { attributes?: object }} LoggerGlobalOptions
+ * @typedef {Pick<pino.LoggerOptions, 'level' | 'transport' | 'crlf' | 'formatters' | 'enabled' | 'msgPrefix' | 'name' | 'timestamp'> & { attributes?: object }} LoggerGlobalOptions
  */
 
 const kInternalConstructor = Symbol('kInternalConstructor')
@@ -15,10 +16,10 @@ const kUpdatePinoGlobal = Symbol('kUpdatePinoGlobal')
  * @returns {LoggerGlobalOptions}
  */
 function buildDefaultOptionsFromEnvironment() {
-  let attributes = undefined
+  let base = { pid: process.pid, hostname: hostname() }
 
   if (process.env.NODE_LOGGER_ATTRIBUTES) {
-    attributes = process.env.NODE_LOGGER_ATTRIBUTES.split(',').reduce((acc, curr) => {
+    base = process.env.NODE_LOGGER_ATTRIBUTES.split(',').reduce((acc, curr) => {
       const [key, value] = curr.split('=')
 
       // TODO: Sanitize key to avoid security issues
@@ -34,8 +35,8 @@ function buildDefaultOptionsFromEnvironment() {
     options.level = process.env.NODE_LOGGER_LEVEL
   }
 
-  if (attributes) {
-    options.attributes = attributes
+  if (base) {
+    options.base = base
   }
 
   return options
@@ -57,8 +58,7 @@ function setOptions(options) {
 
   options = Object.assign({}, buildDefaultOptionsFromEnvironment(), options)
 
-  const attributes = options.attributes
-  const validProperties = ['level', 'transport', 'customLevels', 'crlf', 'formatters', 'enabled', 'msgPrefix', 'name', 'timestamp']
+  const validProperties = ['name', 'level', 'timestamp', 'formatters', 'transport', 'msgPrefix', 'crlf',  'base', 'nestedKey', 'enabled']
 
   for (const key of Object.keys(options)) {
     if (!validProperties.includes(key)) {
@@ -66,15 +66,7 @@ function setOptions(options) {
     }
   }
 
-  pinoInstance = pino({
-    ...options,
-    ...attributes && {
-      attribute: () => attributes
-    },
-    customLevels: {
-      debug: 0
-    }
-  })
+  pinoInstance = pino(options)
 
   for (const logger of pinoChildInstances.values()) {
     logger[kUpdatePinoGlobal]()
@@ -127,20 +119,21 @@ class Logger {
    */
   [kUpdatePinoGlobal]() {
     this.#pinoChild = pinoInstance.child({
-      ...this.#options.attributes,
+      ...this.#options.base,
       name: this.#name
     }, {
       level: this.#options.level,
       msgPrefix: this.#options.msgPrefix
     })
 
-    this.fatal = this.#pinoChild.fatal.bind(this.#pinoChild)
+    this.emergency = this.#pinoChild.emergency.bind(this.#pinoChild)
+    this.alert = this.#pinoChild.alert.bind(this.#pinoChild)
+    this.critical = this.#pinoChild.critical.bind(this.#pinoChild)
     this.error = this.#pinoChild.error.bind(this.#pinoChild)
-    this.warn = this.#pinoChild.warn.bind(this.#pinoChild)
+    this.warning = this.#pinoChild.warning.bind(this.#pinoChild)
+    this.notice = this.#pinoChild.notice.bind(this.#pinoChild)
     this.info = this.#pinoChild.info.bind(this.#pinoChild)
     this.debug = this.#pinoChild.debug.bind(this.#pinoChild)
-    this.trace = this.#pinoChild.trace.bind(this.#pinoChild)
-    this.silent = this.#pinoChild.silent.bind(this.#pinoChild)
   }
 
   isEnabled() {

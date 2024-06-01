@@ -4,4 +4,4 @@ import { getLogger } from '../index.mjs';
 
 const logger = getLogger('my-app');
 
-logger.debug('Hello, world!');
+logger.debug({ test: true}, 'Hello, world!', { batata: true });

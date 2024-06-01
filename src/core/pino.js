@@ -5,8 +5,8 @@ const caller = require('./caller')
 const time = require('./time')
 const proto = require('./proto')
 const symbols = require('./symbols')
-const { assertDefaultLevelFound, mappings, genLsCache, genLevelComparison, assertLevelComparison } = require('./levels')
-const { DEFAULT_LEVELS, SORTING_ORDER } = require('./constants')
+const { assertDefaultLevelFound, mappings, genLsCache } = require('./levels')
+const { DEFAULT_LEVELS } = require('./constants')
 const {
   createArgsNormalizer,
   asChindings,
@@ -24,8 +24,6 @@ const {
   endSym,
   formatOptsSym,
   nestedKeySym,
-  levelCompSym,
-  useOnlyCustomLevelsSym,
   formattersSym,
   nestedKeyStrSym,
   msgPrefixSym
@@ -35,7 +33,6 @@ const { pid } = process
 const hostname = os.hostname()
 const defaultOptions = {
   level: 'info',
-  levelComparison: SORTING_ORDER.ASC,
   levels: DEFAULT_LEVELS,
   nestedKey: null,
   enabled: true,
@@ -50,8 +47,6 @@ const defaultOptions = {
   }),
   timestamp: epochTime,
   name: undefined,
-  customLevels: null,
-  useOnlyCustomLevels: false,
   stringify: defaultStringify,
 }
 
@@ -67,9 +62,6 @@ function pino(...args) {
     base,
     name,
     level,
-    customLevels,
-    levelComparison,
-    useOnlyCustomLevels,
     formatters,
     msgPrefix,
     stringify
@@ -102,23 +94,17 @@ function pino(...args) {
     : (timestamp ? epochTime : nullTime)
   const timeSliceIndex = time().indexOf(':') + 1
 
-  if (useOnlyCustomLevels && !customLevels) throw Error('customLevels is required if useOnlyCustomLevels is set true')
   if (msgPrefix && typeof msgPrefix !== 'string') throw Error(`Unknown msgPrefix type "${typeof msgPrefix}" - expected "string"`)
 
-  assertDefaultLevelFound(level, customLevels, useOnlyCustomLevels)
-  const levels = mappings(customLevels, useOnlyCustomLevels)
+  assertDefaultLevelFound(level)
+  const levels = mappings()
 
   if (typeof stream.emit === 'function') {
     stream.emit('message', { code: 'PINO_CONFIG', config: { levels } })
   }
 
-  assertLevelComparison(levelComparison)
-  const levelCompFunc = genLevelComparison(levelComparison)
-
   Object.assign(instance, {
     levels,
-    [levelCompSym]: levelCompFunc,
-    [useOnlyCustomLevelsSym]: useOnlyCustomLevels,
     [streamSym]: stream,
     [timeSym]: time,
     [timeSliceIndexSym]: timeSliceIndex,

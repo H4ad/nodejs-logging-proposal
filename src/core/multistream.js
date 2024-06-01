@@ -11,7 +11,6 @@ function multistream (streamsArray, opts) {
   opts = opts || { dedupe: false }
 
   const streamLevels = Object.create(DEFAULT_LEVELS)
-  streamLevels.silent = Infinity
   if (opts.levels && typeof opts.levels === 'object') {
     Object.keys(opts.levels).forEach(i => {
       streamLevels[i] = opts.levels[i]
