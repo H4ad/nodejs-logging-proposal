@@ -149,13 +149,6 @@ export interface LoggerTransportMultiOptions<TransportOptions = Record<string, a
  */
 export type LoggerGlobalOptions = {
   /**
-   * The name of the logger.
-   *
-   * @default undefined
-   */
-  name?: string;
-
-  /**
    * One of the supported levels.
    *
    * @default info

@@ -58,7 +58,7 @@ function setOptions(options) {
 
   options = Object.assign({}, buildDefaultOptionsFromEnvironment(), options)
 
-  const validProperties = ['name', 'level', 'timestamp', 'formatters', 'transport', 'msgPrefix', 'crlf',  'base', 'nestedKey', 'enabled']
+  const validProperties = ['level', 'timestamp', 'formatters', 'transport', 'msgPrefix', 'crlf',  'base', 'nestedKey', 'enabled']
 
   for (const key of Object.keys(options)) {
     if (!validProperties.includes(key)) {

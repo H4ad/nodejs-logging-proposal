@@ -60,7 +60,6 @@ function pino(...args) {
     timestamp,
     nestedKey,
     base,
-    name,
     level,
     formatters,
     msgPrefix,
@@ -82,11 +81,7 @@ function pino(...args) {
 
   let chindings = ''
   if (base !== null) {
-    if (name === undefined) {
-      chindings = coreChindings(base)
-    } else {
-      chindings = coreChindings(Object.assign({}, base, { name }))
-    }
+    chindings = coreChindings(base)
   }
 
   const time = (timestamp instanceof Function)
